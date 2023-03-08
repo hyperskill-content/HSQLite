@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import android.graphics.Outline
 import android.graphics.Paint
 import android.os.Bundle
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -50,6 +51,17 @@ class MainActivity : Activity() {
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
             (holder.itemView as TextView).text = currentList[position].name
+        }
+
+        override fun submitList(list: MutableList<Person>?, commitCallback: Runnable?) {
+            if (Looper.myLooper() !== Looper.getMainLooper()) {
+                // ensure main thread if Differ chooses fast path without async diffing
+                window.decorView.post {
+                    super.submitList(list, commitCallback)
+                }
+            } else {
+                super.submitList(list, commitCallback)
+            }
         }
     }
 
