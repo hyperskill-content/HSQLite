@@ -37,7 +37,7 @@ class DbHelper(
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        throw UnsupportedOperationException()
+        throw UnsupportedOperationException() // we have single schema version, no migrations yet
     }
 }
 
@@ -108,12 +108,18 @@ class PersonStore(private val db: SQLiteDatabase) : Closeable {
         }
 
     override fun close() {
-        insertRef.get()?.close()
-        updateRef.get()?.close()
-        deleteRef.get()?.close()
         db.close()
     }
 
+    /**
+     * Poll for an existing prepared statement or create a new one.
+     * This ensures thread-safe statement reuse:
+     * any thread can take or prepare a statement,
+     * but two threads couldn't use one statement at the same time.
+     *
+     * The [ref] must be used with the same [query].
+     * The statement provided to the [block] must never leak outside.
+     */
     private inline fun <R> withStatement(
         ref: AtomicReference<SQLiteStatement>,
         @Language("SQL") query: String,

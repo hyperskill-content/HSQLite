@@ -43,7 +43,7 @@ class MainActivity : Activity() {
                 holder.itemView.setOnClickListener { _ ->
                     val pos = holder.bindingAdapterPosition
                     if (pos >= 0) {
-                        val clicked = currentList[pos]
+                        val clicked = currentList[pos] // show edit dialog when clicked
                         personDialog(clicked.id, clicked.name, clicked.birth)
                     }
                 }
@@ -71,8 +71,9 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // database access is file I/O, do it on a background thread
         val fileIo = fileIoExecutor ?: Executors.newSingleThreadExecutor().also { fileIoExecutor = it }
-        personStore = fileIo.submit(Callable {
+        personStore = fileIo.submit(Callable { // initialize database asynchronously
             PersonStore(DbHelper(this).writableDatabase).also {
                 personAdapter.submitList(it.all())
             }
@@ -80,6 +81,8 @@ class MainActivity : Activity() {
 
         findViewById<RecyclerView>(R.id.list).apply {
             adapter = personAdapter
+
+            // swipe-to-remove
             ItemTouchHelper(object : SwipeToRemoveCallback() {
 
                 override fun onSwiped(at: Int) {
@@ -92,7 +95,7 @@ class MainActivity : Activity() {
 
                 private val redPaint = Paint().also { it.color = 0x7FFF0000 }
                 private val deleteIcon = getDrawable(R.drawable.ic_delete_forever)!!
-                override fun onChildDraw(
+                override fun onChildDraw( // during the swipe, draw red background and trash can
                     c: Canvas, recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder,
                     dX: Float, dY: Float, actionState: Int, isCurrentlyActive: Boolean,
                 ) {
@@ -112,7 +115,7 @@ class MainActivity : Activity() {
 
         findViewById<ImageButton>(R.id.add).apply {
             outlineProvider = OvalOutline // make it look like FAB without actual FAB
-            setOnClickListener {
+            setOnClickListener { // open a dialog to create new record
                 personDialog(null, "", LocalDate.now())
             }
         }
