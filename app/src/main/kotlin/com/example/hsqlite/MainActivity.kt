@@ -155,7 +155,13 @@ class MainActivity : Activity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        personStore.get().close()
+
+        // Release the whole database.
+        personStore.get().db.close()
+        // If we wanted to release only `personStore` leaving database operational,
+        // we could do `personStore.get().close()` instead.
+        // Closing database kills all its prepared statements, so we don't need to do both.
+
         if (isFinishing) {
             fileIoExecutor?.let {
                 it.shutdown()

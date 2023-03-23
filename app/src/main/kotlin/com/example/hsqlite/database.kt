@@ -41,7 +41,7 @@ class DbHelper(
     }
 }
 
-class PersonStore(private val db: SQLiteDatabase) : Closeable {
+class PersonStore(val db: SQLiteDatabase) : Closeable {
 
     private companion object {
         private val idCol = arrayOf("_id")
@@ -108,7 +108,9 @@ class PersonStore(private val db: SQLiteDatabase) : Closeable {
         }
 
     override fun close() {
-        db.close()
+        insertRef.getAndSet(null)?.close()
+        updateRef.getAndSet(null)?.close()
+        deleteRef.getAndSet(null)?.close()
     }
 
     /**
